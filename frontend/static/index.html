@@ -4,362 +4,274 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Fleet Platform (local)</title>
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <h1>Fleet Platform (local) v0.6</h1>
-  <p><a href="/dashboard">Ir al dashboard de gráficas</a></p>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">FP</div>
+      <div>
+        <div class="brand-title">Fleet Platform</div>
+        <div class="brand-subtitle">local v0.7 (corporativo)</div>
+      </div>
+    </div>
 
-  <section>
-    <h2>Crear camión</h2>
-    <form id="truckForm">
-      <input name="unit_number" placeholder="unit_number (ej. 2827)" required />
-      <input name="vin" placeholder="vin (opcional)" />
-      <input name="year" placeholder="year (opcional)" />
-      <input name="make" placeholder="make (opcional)" />
-      <input name="model" placeholder="model (opcional)" />
-      <input name="engine" placeholder="engine (opcional)" />
-      <input name="current_km" placeholder="current_km (opcional)" />
-      <button type="submit">Guardar camión</button>
-    </form>
-    <pre id="truckOut"></pre>
-  </section>
+    <div class="topbar-right">
+      <div class="pill" id="healthPill">
+        <span class="dot"></span>
+        <span id="healthText">Conectando…</span>
+      </div>
+      <a class="btn btn-ghost" href="/dashboard">Dashboard</a>
+    </div>
+  </header>
 
-  <section>
-    <h2>Camiones</h2>
-    <button id="truckReload">Recargar</button>
-    <pre id="truckList"></pre>
-  </section>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="nav">
+        <button class="nav-item is-active" data-view="overview">Resumen</button>
+        <button class="nav-item" data-view="fleet">Flota</button>
+        <button class="nav-item" data-view="loads">Cargas</button>
+        <button class="nav-item" data-view="ops">Operaciones</button>
+        <button class="nav-item" data-view="analytics">Analítica</button>
+      </div>
+      <div class="hint" style="margin-top:12px;">
+        Consejo: crea camión, trailer y conductor, luego una carga, y después registra fuel/km/pagos.
+      </div>
+    </aside>
 
-  <hr>
+    <main class="main">
+      <div class="container">
 
-  <section>
-    <h2>Crear trailer</h2>
-    <form id="trailerForm">
-      <input name="unit_number" placeholder="unit_number (ej. TR-101)" required />
-      <input name="vin" placeholder="vin (opcional)" />
-      <select name="type" required>
-        <option value="">type...</option>
-        <option value="reefer">reefer</option>
-        <option value="dry_van">dry_van</option>
-        <option value="flatbed">flatbed</option>
-      </select>
-      <input name="current_km" placeholder="current_km (opcional)" />
-      <button type="submit">Guardar trailer</button>
-    </form>
-    <pre id="trailerOut"></pre>
-  </section>
+        <section class="view is-active" id="view-overview">
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Acciones rápidas</div>
+              </div>
+              <div class="card-body">
+                <div class="card-actions">
+                  <button class="btn" data-open-create="trucks">Nuevo camión</button>
+                  <button class="btn" data-open-create="trailers">Nuevo trailer</button>
+                  <button class="btn" data-open-create="drivers">Nuevo conductor</button>
+                  <button class="btn" data-open-create="loads">Nueva carga</button>
+                </div>
+                <div class="hint" style="margin-top:12px;">
+                  Las gráficas están en Dashboard. Aquí verás KPIs y tablas.
+                </div>
+              </div>
+            </div>
 
-  <section>
-    <h2>Trailers</h2>
-    <button id="trailerReload">Recargar</button>
-    <pre id="trailerList"></pre>
-  </section>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">KPIs</div>
+                <div class="card-actions">
+                  <button class="btn btn-ghost" id="btnRefreshStats">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="kpi-grid">
+                  <div class="kpi">
+                    <div class="kpi-label">Litros totales (fuel)</div>
+                    <div class="kpi-value" id="kpiLiters">—</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi-label">Costo total (fuel)</div>
+                    <div class="kpi-value" id="kpiFuelCost">—</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi-label">KM totales</div>
+                    <div class="kpi-value" id="kpiKm">—</div>
+                  </div>
+                  <div class="kpi">
+                    <div class="kpi-label">Pagos totales</div>
+                    <div class="kpi-value" id="kpiPay">—</div>
+                  </div>
+                </div>
+                <div class="small muted" style="margin-top:8px;">Fuente: /api/stats/summary</div>
+              </div>
+            </div>
+          </div>
 
-  <hr>
+          <div class="card" style="margin-top:14px;">
+            <div class="card-header">
+              <div class="card-title">Últimos registros</div>
+              <div class="card-actions">
+                <button class="btn btn-ghost" id="btnRefreshRecent">Recargar</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="grid grid-3">
+                <div>
+                  <div class="small muted" style="margin-bottom:8px;">Camiones</div>
+                  <div class="table-wrap"><table class="table" id="recentTrucks"></table></div>
+                </div>
+                <div>
+                  <div class="small muted" style="margin-bottom:8px;">Cargas</div>
+                  <div class="table-wrap"><table class="table" id="recentLoads"></table></div>
+                </div>
+                <div>
+                  <div class="small muted" style="margin-bottom:8px;">Fuel</div>
+                  <div class="table-wrap"><table class="table" id="recentFuel"></table></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-  <section>
-    <h2>Crear conductor</h2>
-    <form id="driverForm">
-      <input name="name" placeholder="name (ej. Juan Perez)" required />
-      <input name="license" placeholder="license (opcional)" />
-      <input name="phone" placeholder="phone (opcional)" />
-      <select name="pay_type">
-        <option value="">pay_type (opcional)...</option>
-        <option value="per_km">per_km</option>
-        <option value="percent">percent</option>
-        <option value="salary">salary</option>
-      </select>
-      <input name="pay_rate" placeholder="pay_rate (opcional)" />
-      <button type="submit">Guardar conductor</button>
-    </form>
-    <pre id="driverOut"></pre>
-  </section>
+        <section class="view" id="view-fleet">
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Camiones</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="trucks">Nuevo</button>
+                  <button class="btn btn-ghost" data-refresh="trucks">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tableTrucks"></table></div>
+              </div>
+            </div>
 
-  <section>
-    <h2>Conductores</h2>
-    <button id="driverReload">Recargar</button>
-    <pre id="driverList"></pre>
-  </section>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Trailers</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="trailers">Nuevo</button>
+                  <button class="btn btn-ghost" data-refresh="trailers">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tableTrailers"></table></div>
+              </div>
+            </div>
 
-  <hr>
+            <div class="card span-2">
+              <div class="card-header">
+                <div class="card-title">Conductores</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="drivers">Nuevo</button>
+                  <button class="btn btn-ghost" data-refresh="drivers">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tableDrivers"></table></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-  <section>
-    <h2>Crear carga</h2>
-    <form id="loadForm">
-      <input name="reference" placeholder="reference (ej. LOAD-001)" required />
-      <input name="shipper" placeholder="shipper (opcional)" />
-      <input name="pickup_location" placeholder="pickup_location (opcional)" />
-      <input name="delivery_location" placeholder="delivery_location (opcional)" />
-      <input name="pickup_date" placeholder="pickup_date (YYYY-MM-DD)" />
-      <input name="delivery_date" placeholder="delivery_date (YYYY-MM-DD)" />
-      <input name="commodity" placeholder="commodity (opcional)" />
-      <input name="weight_kg" placeholder="weight_kg (opcional)" />
-      <input name="distance_km" placeholder="distance_km (opcional)" />
+        <section class="view" id="view-loads">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Cargas</div>
+              <div class="card-actions">
+                <button class="btn" data-open-create="loads">Nueva carga</button>
+                <button class="btn btn-ghost" data-refresh="loads">Recargar</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="hint">
+                Para crear una carga necesitas truck_id, trailer_id y driver_id existentes (ver Flota).
+              </div>
+              <div class="table-wrap"><table class="table" id="tableLoads"></table></div>
+            </div>
+          </div>
+        </section>
 
-      <input name="truck_id" placeholder="truck_id (requerido)" required />
-      <input name="trailer_id" placeholder="trailer_id (requerido)" required />
-      <input name="driver_id" placeholder="driver_id (requerido)" required />
+        <section class="view" id="view-ops">
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Fuel entries</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="fuel_entries">Registrar</button>
+                  <button class="btn btn-ghost" data-refresh="fuel_entries">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tableFuel"></table></div>
+              </div>
+            </div>
 
-      <select name="status">
-        <option value="">status (default planned)</option>
-        <option value="planned">planned</option>
-        <option value="in_transit">in_transit</option>
-        <option value="delivered">delivered</option>
-        <option value="cancelled">cancelled</option>
-      </select>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">KM logs</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="km_logs">Registrar</button>
+                  <button class="btn btn-ghost" data-refresh="km_logs">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tableKm"></table></div>
+              </div>
+            </div>
 
-      <button type="submit">Guardar carga</button>
-    </form>
-    <pre id="loadOut"></pre>
-  </section>
+            <div class="card span-2">
+              <div class="card-header">
+                <div class="card-title">Pagos a conductores</div>
+                <div class="card-actions">
+                  <button class="btn" data-open-create="driver_payments">Registrar</button>
+                  <button class="btn btn-ghost" data-refresh="driver_payments">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap"><table class="table" id="tablePay"></table></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-  <section>
-    <h2>Cargas</h2>
-    <button id="loadReload">Recargar</button>
-    <pre id="loadList"></pre>
-  </section>
+        <section class="view" id="view-analytics">
+          <div class="grid grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Resumen (API)</div>
+                <div class="card-actions">
+                  <button class="btn btn-ghost" id="btnRefreshStats2">Recargar</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <pre class="code" id="statsRaw">—</pre>
+              </div>
+            </div>
 
-  <hr>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Dashboard</div>
+              </div>
+              <div class="card-body">
+                <div class="hint">Dashboard genera gráficas SVG desde el backend.</div>
+                <a class="btn" href="/dashboard">Abrir dashboard</a>
+              </div>
+            </div>
+          </div>
+        </section>
 
-  <section>
-    <h2>Registrar combustible</h2>
-    <form id="fuelForm">
-      <input name="truck_id" placeholder="truck_id (requerido)" required />
-      <input name="liters" placeholder="liters (requerido)" required />
-      <input name="total_cost" placeholder="total_cost (opcional)" />
-      <input name="currency" placeholder="currency (USD/MXN) opcional" />
-      <input name="odometer_km" placeholder="odometer_km (opcional)" />
-      <input name="location" placeholder="location (opcional)" />
-      <input name="driver_id" placeholder="driver_id (opcional)" />
-      <input name="load_id" placeholder="load_id (opcional)" />
-      <input name="fueled_at" placeholder="fueled_at (YYYY-MM-DD HH:MM) opcional" />
-      <button type="submit">Guardar fuel</button>
-    </form>
-    <pre id="fuelOut"></pre>
-  </section>
+      </div>
+    </main>
+  </div>
 
-  <section>
-    <h2>Fuel entries</h2>
-    <button id="fuelReload">Recargar</button>
-    <pre id="fuelList"></pre>
-  </section>
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Crear registro">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Nuevo</div>
+        <button class="icon-btn" data-close-modal aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="modalForm" class="form"></form>
+        <div class="form-actions">
+          <button class="btn btn-ghost" data-close-modal type="button">Cancelar</button>
+          <button class="btn" id="modalSubmit" type="button">Guardar</button>
+        </div>
+        <div class="small muted" id="modalHint" style="margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
 
-  <hr>
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="true"></div>
 
-  <section>
-    <h2>Registrar kilómetros</h2>
-    <form id="kmForm">
-      <input name="truck_id" placeholder="truck_id (requerido)" required />
-      <input name="km" placeholder="km (requerido)" required />
-      <input name="odometer_start" placeholder="odometer_start (opcional)" />
-      <input name="odometer_end" placeholder="odometer_end (opcional)" />
-      <input name="load_id" placeholder="load_id (opcional)" />
-      <input name="logged_at" placeholder="logged_at (YYYY-MM-DD HH:MM) opcional" />
-      <button type="submit">Guardar km</button>
-    </form>
-    <pre id="kmOut"></pre>
-  </section>
-
-  <section>
-    <h2>KM logs</h2>
-    <button id="kmReload">Recargar</button>
-    <pre id="kmList"></pre>
-  </section>
-
-  <hr>
-
-  <section>
-    <h2>Registrar pago a conductor</h2>
-    <form id="payForm">
-      <input name="driver_id" placeholder="driver_id (requerido)" required />
-      <input name="amount" placeholder="amount (requerido)" required />
-      <input name="currency" placeholder="currency (USD/MXN) opcional" />
-      <input name="method" placeholder="method (opcional)" />
-      <input name="notes" placeholder="notes (opcional)" />
-      <input name="load_id" placeholder="load_id (opcional)" />
-      <input name="paid_at" placeholder="paid_at (YYYY-MM-DD HH:MM) opcional" />
-      <button type="submit">Guardar pago</button>
-    </form>
-    <pre id="payOut"></pre>
-  </section>
-
-  <section>
-    <h2>Driver payments</h2>
-    <button id="payReload">Recargar</button>
-    <pre id="payList"></pre>
-  </section>
-
-  <hr>
-
-  <section>
-    <h2>Stats summary</h2>
-    <button id="statsReload">Recargar</button>
-    <pre id="statsOut"></pre>
-  </section>
-
-<script>
-async function loadJson(url, elId) {
-  const r = await fetch(url);
-  const data = await r.json();
-  document.getElementById(elId).textContent = JSON.stringify(data, null, 2);
-  return data;
-}
-
-async function postJson(url, payload, outElId) {
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-  const data = await r.json();
-  document.getElementById(outElId).textContent = JSON.stringify(data, null, 2);
-  return data;
-}
-
-function numOrUndef(v) { return v ? Number(v) : undefined; }
-function intOrUndef(v) { return v ? Number(v) : undefined; }
-function strOrUndef(v) { return v ? v : undefined; }
-
-async function loadAll() {
-  await loadJson("/api/trucks", "truckList");
-  await loadJson("/api/trailers", "trailerList");
-  await loadJson("/api/drivers", "driverList");
-  await loadJson("/api/loads", "loadList");
-  await loadJson("/api/fuel_entries", "fuelList");
-  await loadJson("/api/km_logs", "kmList");
-  await loadJson("/api/driver_payments", "payList");
-  await loadJson("/api/stats/summary", "statsOut");
-}
-
-document.getElementById("truckReload").onclick = () => loadJson("/api/trucks", "truckList");
-document.getElementById("trailerReload").onclick = () => loadJson("/api/trailers", "trailerList");
-document.getElementById("driverReload").onclick = () => loadJson("/api/drivers", "driverList");
-document.getElementById("loadReload").onclick = () => loadJson("/api/loads", "loadList");
-document.getElementById("fuelReload").onclick = () => loadJson("/api/fuel_entries", "fuelList");
-document.getElementById("kmReload").onclick = () => loadJson("/api/km_logs", "kmList");
-document.getElementById("payReload").onclick = () => loadJson("/api/driver_payments", "payList");
-document.getElementById("statsReload").onclick = () => loadJson("/api/stats/summary", "statsOut");
-
-document.getElementById("truckForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    unit_number: fd.get("unit_number"),
-    vin: strOrUndef(fd.get("vin")),
-    year: numOrUndef(fd.get("year")),
-    make: strOrUndef(fd.get("make")),
-    model: strOrUndef(fd.get("model")),
-    engine: strOrUndef(fd.get("engine")),
-    current_km: numOrUndef(fd.get("current_km"))
-  };
-  await postJson("/api/trucks", payload, "truckOut");
-  await loadJson("/api/trucks", "truckList");
-  await loadJson("/api/stats/summary", "statsOut");
-};
-
-document.getElementById("trailerForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    unit_number: fd.get("unit_number"),
-    vin: strOrUndef(fd.get("vin")),
-    type: fd.get("type"),
-    current_km: numOrUndef(fd.get("current_km"))
-  };
-  await postJson("/api/trailers", payload, "trailerOut");
-  await loadJson("/api/trailers", "trailerList");
-};
-
-document.getElementById("driverForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    name: fd.get("name"),
-    license: strOrUndef(fd.get("license")),
-    phone: strOrUndef(fd.get("phone")),
-    pay_type: strOrUndef(fd.get("pay_type")),
-    pay_rate: numOrUndef(fd.get("pay_rate"))
-  };
-  await postJson("/api/drivers", payload, "driverOut");
-  await loadJson("/api/drivers", "driverList");
-  await loadJson("/api/stats/summary", "statsOut");
-};
-
-document.getElementById("loadForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    reference: fd.get("reference"),
-    shipper: strOrUndef(fd.get("shipper")),
-    pickup_location: strOrUndef(fd.get("pickup_location")),
-    delivery_location: strOrUndef(fd.get("delivery_location")),
-    pickup_date: strOrUndef(fd.get("pickup_date")),
-    delivery_date: strOrUndef(fd.get("delivery_date")),
-    commodity: strOrUndef(fd.get("commodity")),
-    weight_kg: numOrUndef(fd.get("weight_kg")),
-    distance_km: numOrUndef(fd.get("distance_km")),
-    truck_id: Number(fd.get("truck_id")),
-    trailer_id: Number(fd.get("trailer_id")),
-    driver_id: Number(fd.get("driver_id")),
-    status: strOrUndef(fd.get("status"))
-  };
-  await postJson("/api/loads", payload, "loadOut");
-  await loadJson("/api/loads", "loadList");
-};
-
-document.getElementById("fuelForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    truck_id: Number(fd.get("truck_id")),
-    liters: Number(fd.get("liters")),
-    total_cost: numOrUndef(fd.get("total_cost")),
-    currency: strOrUndef(fd.get("currency")),
-    odometer_km: numOrUndef(fd.get("odometer_km")),
-    location: strOrUndef(fd.get("location")),
-    driver_id: intOrUndef(fd.get("driver_id")),
-    load_id: intOrUndef(fd.get("load_id")),
-    fueled_at: strOrUndef(fd.get("fueled_at"))
-  };
-  await postJson("/api/fuel_entries", payload, "fuelOut");
-  await loadJson("/api/fuel_entries", "fuelList");
-  await loadJson("/api/stats/summary", "statsOut");
-};
-
-document.getElementById("kmForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    truck_id: Number(fd.get("truck_id")),
-    km: Number(fd.get("km")),
-    odometer_start: numOrUndef(fd.get("odometer_start")),
-    odometer_end: numOrUndef(fd.get("odometer_end")),
-    load_id: intOrUndef(fd.get("load_id")),
-    logged_at: strOrUndef(fd.get("logged_at"))
-  };
-  await postJson("/api/km_logs", payload, "kmOut");
-  await loadJson("/api/km_logs", "kmList");
-  await loadJson("/api/stats/summary", "statsOut");
-};
-
-document.getElementById("payForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = {
-    driver_id: Number(fd.get("driver_id")),
-    amount: Number(fd.get("amount")),
-    currency: strOrUndef(fd.get("currency")),
-    method: strOrUndef(fd.get("method")),
-    notes: strOrUndef(fd.get("notes")),
-    load_id: intOrUndef(fd.get("load_id")),
-    paid_at: strOrUndef(fd.get("paid_at"))
-  };
-  await postJson("/api/driver_payments", payload, "payOut");
-  await loadJson("/api/driver_payments", "payList");
-  await loadJson("/api/stats/summary", "statsOut");
-};
-
-loadAll();
-</script>
+  <script src="/app.js"></script>
 </body>
 </html>
