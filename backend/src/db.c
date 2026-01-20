@@ -58,7 +58,21 @@ static int create_schema(sqlite3 *db) {
         "  created_at TEXT DEFAULT (datetime('now'))"
         ");"
         "CREATE INDEX IF NOT EXISTS idx_trailers_unit ON trailers(unit_number);"
-        "CREATE INDEX IF NOT EXISTS idx_trailers_type ON trailers(type);";
+        "CREATE INDEX IF NOT EXISTS idx_trailers_type ON trailers(type);"
+
+        "CREATE TABLE IF NOT EXISTS drivers ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  name TEXT NOT NULL,"
+        "  license TEXT,"
+        "  phone TEXT,"
+        "  pay_type TEXT,"       /* per_km | percent | salary */
+        "  pay_rate REAL,"       /* número según pay_type */
+        "  status TEXT DEFAULT 'active',"
+        "  created_at TEXT DEFAULT (datetime('now'))"
+        ");"
+        "CREATE INDEX IF NOT EXISTS idx_drivers_name ON drivers(name);"
+        "CREATE INDEX IF NOT EXISTS idx_drivers_license ON drivers(license);";
+
 
     return db_exec(db, schema);
 }

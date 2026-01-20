@@ -6,7 +6,7 @@
   <title>Fleet Platform (local)</title>
 </head>
 <body>
-  <h1>Fleet Platform (local) v0.2</h1>
+  <h1>Fleet Platform (local) v0.3</h1>
 
   <section>
     <h2>Crear camión</h2>
@@ -54,6 +54,35 @@
     <pre id="trailerList"></pre>
   </section>
 
+  <hr>
+
+    <section>
+    <h2>Crear conductor</h2>
+    <form id="driverForm">
+        <input name="name" placeholder="name (ej. Juan Perez)" required />
+        <input name="license" placeholder="license (opcional)" />
+        <input name="phone" placeholder="phone (opcional)" />
+
+        <select name="pay_type">
+        <option value="">pay_type (opcional)...</option>
+        <option value="per_km">per_km</option>
+        <option value="percent">percent</option>
+        <option value="salary">salary</option>
+        </select>
+
+        <input name="pay_rate" placeholder="pay_rate (opcional)" />
+        <button type="submit">Guardar conductor</button>
+    </form>
+    <pre id="driverOut"></pre>
+    </section>
+
+    <section>
+    <h2>Conductores</h2>
+    <button id="driverReload">Recargar</button>
+    <pre id="driverList"></pre>
+    </section>
+
+
 <script>
 async function loadTrucks() {
   const r = await fetch("/api/trucks");
@@ -67,8 +96,15 @@ async function loadTrailers() {
   document.getElementById("trailerList").textContent = JSON.stringify(data, null, 2);
 }
 
+async function loadDrivers() {
+  const r = await fetch("/api/drivers");
+  const data = await r.json();
+  document.getElementById("driverList").textContent = JSON.stringify(data, null, 2);
+}
+
 document.getElementById("truckReload").onclick = loadTrucks;
 document.getElementById("trailerReload").onclick = loadTrailers;
+document.getElementById("driverReload").onclick = loadDrivers;
 
 document.getElementById("truckForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -115,8 +151,35 @@ document.getElementById("trailerForm").onsubmit = async (e) => {
   await loadTrailers();
 };
 
+document.getElementById("driverForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payType = fd.get("pay_type") || undefined;
+  const payRateRaw = fd.get("pay_rate");
+  const payload = {
+    name: fd.get("name"),
+    license: fd.get("license") || undefined,
+    phone: fd.get("phone") || undefined,
+    pay_type: payType,
+    pay_rate: payRateRaw ? Number(payRateRaw) : undefined
+  };
+
+  const r = await fetch("/api/drivers", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await r.json();
+  document.getElementById("driverOut").textContent = JSON.stringify(data, null, 2);
+  await loadDrivers();
+};
+
 loadTrucks();
 loadTrailers();
+loadDrivers();
+
 </script>
 </body>
 </html>
