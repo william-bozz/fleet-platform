@@ -2,26 +2,29 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
 #include "civetweb.h"
 
 #include "db.h"
 #include "http.h"
+
 #include "trucks.h"
 #include "trailers.h"
 #include "drivers.h"
 #include "loads.h"
 
+#include "fuel_entries.h"
+#include "km_logs.h"
+#include "driver_payments.h"
+#include "stats.h"
+
 static int handle_health(struct mg_connection *conn, void *cbdata) {
     (void)cbdata;
-    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.4\"}");
+    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.5\"}");
     return 200;
 }
 
 int main(void) {
-    if (db_init("data/app.db") != 0) {
-        return 1;
-    }
+    if (db_init("data/app.db") != 0) return 1;
 
     const char *options[] = {
         "listening_ports", "8080",
@@ -34,24 +37,25 @@ int main(void) {
     memset(&callbacks, 0, sizeof(callbacks));
 
     struct mg_context *ctx = mg_start(&callbacks, 0, options);
-    if (!ctx) {
-        fprintf(stderr, "No se pudo iniciar el servidor HTTP.\n");
-        return 1;
-    }
+    if (!ctx) { fprintf(stderr, "No se pudo iniciar el servidor HTTP.\n"); return 1; }
 
     mg_set_request_handler(ctx, "/health", handle_health, 0);
+
     mg_set_request_handler(ctx, "/api/trucks", handle_api_trucks, 0);
     mg_set_request_handler(ctx, "/api/trailers", handle_api_trailers, 0);
     mg_set_request_handler(ctx, "/api/drivers", handle_api_drivers, 0);
     mg_set_request_handler(ctx, "/api/loads", handle_api_loads, 0);
 
-    printf("Servidor local: http://127.0.0.1:8080\n");
-    printf("health:         http://127.0.0.1:8080/health\n");
-    printf("frontend:       http://127.0.0.1:8080/\n");
-    printf("api trucks:     http://127.0.0.1:8080/api/trucks\n");
-    printf("api trailers:   http://127.0.0.1:8080/api/trailers\n");
-    printf("api drivers:    http://127.0.0.1:8080/api/drivers\n");
-    printf("api loads:      http://127.0.0.1:8080/api/loads\n");
+    mg_set_request_handler(ctx, "/api/fuel_entries", handle_api_fuel_entries, 0);
+    mg_set_request_handler(ctx, "/api/km_logs", handle_api_km_logs, 0);
+    mg_set_request_handler(ctx, "/api/driver_payments", handle_api_driver_payments, 0);
+
+    mg_set_request_handler(ctx, "/api/stats/summary", handle_api_stats_summary, 0);
+
+    printf("Servidor local:  http://127.0.0.1:8080\n");
+    printf("health:          http://127.0.0.1:8080/health\n");
+    printf("frontend:        http://127.0.0.1:8080/\n");
+    printf("api stats:       http://127.0.0.1:8080/api/stats/summary\n");
 
     for (;;) sleep(1);
 
