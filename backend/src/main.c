@@ -16,10 +16,11 @@
 #include "km_logs.h"
 #include "driver_payments.h"
 #include "stats.h"
+#include "charts.h"
 
 static int handle_health(struct mg_connection *conn, void *cbdata) {
     (void)cbdata;
-    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.5\"}");
+    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.6\"}");
     return 200;
 }
 
@@ -52,10 +53,15 @@ int main(void) {
 
     mg_set_request_handler(ctx, "/api/stats/summary", handle_api_stats_summary, 0);
 
+    mg_set_request_handler(ctx, "/dashboard", handle_dashboard, 0);
+
+    mg_set_request_handler(ctx, "/charts/fuel_liters_by_truck.svg", handle_chart_fuel_liters_by_truck, 0);
+    mg_set_request_handler(ctx, "/charts/fuel_cost_by_truck.svg", handle_chart_fuel_cost_by_truck, 0);
+    mg_set_request_handler(ctx, "/charts/km_by_truck.svg", handle_chart_km_by_truck, 0);
+    mg_set_request_handler(ctx, "/charts/pay_by_driver.svg", handle_chart_pay_by_driver, 0);
+
     printf("Servidor local:  http://127.0.0.1:8080\n");
-    printf("health:          http://127.0.0.1:8080/health\n");
-    printf("frontend:        http://127.0.0.1:8080/\n");
-    printf("api stats:       http://127.0.0.1:8080/api/stats/summary\n");
+    printf("Dashboard:       http://127.0.0.1:8080/dashboard\n");
 
     for (;;) sleep(1);
 

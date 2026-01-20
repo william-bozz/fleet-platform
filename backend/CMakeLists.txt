@@ -16,6 +16,7 @@ add_executable(fleetd
   src/km_logs.c
   src/driver_payments.c
   src/stats.c
+  src/charts.c
   vendor/civetweb/src/civetweb.c
   vendor/cJSON/cJSON.c
 )

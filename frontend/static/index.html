@@ -6,7 +6,8 @@
   <title>Fleet Platform (local)</title>
 </head>
 <body>
-  <h1>Fleet Platform (local) v0.5</h1>
+  <h1>Fleet Platform (local) v0.6</h1>
+  <p><a href="/dashboard">Ir al dashboard de gráficas</a></p>
 
   <section>
     <h2>Crear camión</h2>
@@ -94,9 +95,11 @@
       <input name="commodity" placeholder="commodity (opcional)" />
       <input name="weight_kg" placeholder="weight_kg (opcional)" />
       <input name="distance_km" placeholder="distance_km (opcional)" />
+
       <input name="truck_id" placeholder="truck_id (requerido)" required />
       <input name="trailer_id" placeholder="trailer_id (requerido)" required />
       <input name="driver_id" placeholder="driver_id (requerido)" required />
+
       <select name="status">
         <option value="">status (default planned)</option>
         <option value="planned">planned</option>
@@ -104,6 +107,7 @@
         <option value="delivered">delivered</option>
         <option value="cancelled">cancelled</option>
       </select>
+
       <button type="submit">Guardar carga</button>
     </form>
     <pre id="loadOut"></pre>

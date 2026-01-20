@@ -1,6 +1,28 @@
 #include "http.h"
+
 #include <stdlib.h>
 #include <string.h>
+
+static void send_with_type(struct mg_connection *conn, int status,
+                           const char *content_type, const char *body) {
+    const char *status_text =
+        (status == 200) ? "OK" :
+        (status == 201) ? "Created" :
+        (status == 400) ? "Bad Request" :
+        (status == 404) ? "Not Found" :
+        (status == 500) ? "Internal Server Error" : "OK";
+
+    size_t len = body ? strlen(body) : 0;
+
+    mg_printf(conn,
+              "HTTP/1.1 %d %s\r\n"
+              "Content-Type: %s\r\n"
+              "Cache-Control: no-store\r\n"
+              "Content-Length: %zu\r\n"
+              "\r\n"
+              "%s",
+              status, status_text, content_type, len, body ? body : "");
+}
 
 char *read_request_body(struct mg_connection *conn, long long *out_len) {
     const struct mg_request_info *ri = mg_get_request_info(conn);
@@ -27,19 +49,13 @@ char *read_request_body(struct mg_connection *conn, long long *out_len) {
 }
 
 void send_json(struct mg_connection *conn, int status, const char *json) {
-    const char *status_text =
-        (status == 200) ? "OK" :
-        (status == 201) ? "Created" :
-        (status == 400) ? "Bad Request" :
-        (status == 404) ? "Not Found" :
-        (status == 500) ? "Internal Server Error" : "OK";
+    send_with_type(conn, status, "application/json", json);
+}
 
-    mg_printf(conn,
-              "HTTP/1.1 %d %s\r\n"
-              "Content-Type: application/json\r\n"
-              "Cache-Control: no-store\r\n"
-              "Content-Length: %zu\r\n"
-              "\r\n"
-              "%s",
-              status, status_text, strlen(json), json);
+void send_html(struct mg_connection *conn, int status, const char *html) {
+    send_with_type(conn, status, "text/html; charset=utf-8", html);
+}
+
+void send_svg(struct mg_connection *conn, int status, const char *svg) {
+    send_with_type(conn, status, "image/svg+xml; charset=utf-8", svg);
 }
