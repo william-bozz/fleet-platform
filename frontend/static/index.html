@@ -6,38 +6,71 @@
   <title>Fleet Platform (local)</title>
 </head>
 <body>
-  <h1>Fleet Platform (local)</h1>
+  <h1>Fleet Platform (local) v0.2</h1>
 
   <section>
     <h2>Crear camión</h2>
-    <form id="f">
+    <form id="truckForm">
       <input name="unit_number" placeholder="unit_number (ej. 2827)" required />
       <input name="vin" placeholder="vin (opcional)" />
       <input name="year" placeholder="year (opcional)" />
       <input name="make" placeholder="make (opcional)" />
       <input name="model" placeholder="model (opcional)" />
       <input name="engine" placeholder="engine (opcional)" />
-      <button type="submit">Guardar</button>
+      <button type="submit">Guardar camión</button>
     </form>
-    <pre id="out"></pre>
+    <pre id="truckOut"></pre>
   </section>
 
   <section>
     <h2>Camiones</h2>
-    <button id="reload">Recargar</button>
-    <pre id="list"></pre>
+    <button id="truckReload">Recargar</button>
+    <pre id="truckList"></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Crear trailer</h2>
+    <form id="trailerForm">
+      <input name="unit_number" placeholder="unit_number (ej. TR-101)" required />
+      <input name="vin" placeholder="vin (opcional)" />
+
+      <select name="type" required>
+        <option value="">type...</option>
+        <option value="reefer">reefer</option>
+        <option value="dry_van">dry_van</option>
+        <option value="flatbed">flatbed</option>
+      </select>
+
+      <button type="submit">Guardar trailer</button>
+    </form>
+    <pre id="trailerOut"></pre>
+  </section>
+
+  <section>
+    <h2>Trailers</h2>
+    <button id="trailerReload">Recargar</button>
+    <pre id="trailerList"></pre>
   </section>
 
 <script>
 async function loadTrucks() {
   const r = await fetch("/api/trucks");
   const data = await r.json();
-  document.getElementById("list").textContent = JSON.stringify(data, null, 2);
+  document.getElementById("truckList").textContent = JSON.stringify(data, null, 2);
 }
 
-document.getElementById("reload").onclick = loadTrucks;
+async function loadTrailers() {
+  const r = await fetch("/api/trailers");
+  const data = await r.json();
+  document.getElementById("trailerList").textContent = JSON.stringify(data, null, 2);
+}
 
-document.getElementById("f").onsubmit = async (e) => {
+document.getElementById("truckReload").onclick = loadTrucks;
+document.getElementById("trailerReload").onclick = loadTrailers;
+
+document.getElementById("truckForm").onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
 
@@ -57,11 +90,33 @@ document.getElementById("f").onsubmit = async (e) => {
   });
 
   const data = await r.json();
-  document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+  document.getElementById("truckOut").textContent = JSON.stringify(data, null, 2);
   await loadTrucks();
 };
 
+document.getElementById("trailerForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payload = {
+    unit_number: fd.get("unit_number"),
+    vin: fd.get("vin") || undefined,
+    type: fd.get("type")
+  };
+
+  const r = await fetch("/api/trailers", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await r.json();
+  document.getElementById("trailerOut").textContent = JSON.stringify(data, null, 2);
+  await loadTrailers();
+};
+
 loadTrucks();
+loadTrailers();
 </script>
 </body>
 </html>
