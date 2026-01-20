@@ -6,7 +6,7 @@
   <title>Fleet Platform (local)</title>
 </head>
 <body>
-  <h1>Fleet Platform (local) v0.4</h1>
+  <h1>Fleet Platform (local) v0.5</h1>
 
   <section>
     <h2>Crear camión</h2>
@@ -94,11 +94,9 @@
       <input name="commodity" placeholder="commodity (opcional)" />
       <input name="weight_kg" placeholder="weight_kg (opcional)" />
       <input name="distance_km" placeholder="distance_km (opcional)" />
-
       <input name="truck_id" placeholder="truck_id (requerido)" required />
       <input name="trailer_id" placeholder="trailer_id (requerido)" required />
       <input name="driver_id" placeholder="driver_id (requerido)" required />
-
       <select name="status">
         <option value="">status (default planned)</option>
         <option value="planned">planned</option>
@@ -106,7 +104,6 @@
         <option value="delivered">delivered</option>
         <option value="cancelled">cancelled</option>
       </select>
-
       <button type="submit">Guardar carga</button>
     </form>
     <pre id="loadOut"></pre>
@@ -118,141 +115,247 @@
     <pre id="loadList"></pre>
   </section>
 
+  <hr>
+
+  <section>
+    <h2>Registrar combustible</h2>
+    <form id="fuelForm">
+      <input name="truck_id" placeholder="truck_id (requerido)" required />
+      <input name="liters" placeholder="liters (requerido)" required />
+      <input name="total_cost" placeholder="total_cost (opcional)" />
+      <input name="currency" placeholder="currency (USD/MXN) opcional" />
+      <input name="odometer_km" placeholder="odometer_km (opcional)" />
+      <input name="location" placeholder="location (opcional)" />
+      <input name="driver_id" placeholder="driver_id (opcional)" />
+      <input name="load_id" placeholder="load_id (opcional)" />
+      <input name="fueled_at" placeholder="fueled_at (YYYY-MM-DD HH:MM) opcional" />
+      <button type="submit">Guardar fuel</button>
+    </form>
+    <pre id="fuelOut"></pre>
+  </section>
+
+  <section>
+    <h2>Fuel entries</h2>
+    <button id="fuelReload">Recargar</button>
+    <pre id="fuelList"></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Registrar kilómetros</h2>
+    <form id="kmForm">
+      <input name="truck_id" placeholder="truck_id (requerido)" required />
+      <input name="km" placeholder="km (requerido)" required />
+      <input name="odometer_start" placeholder="odometer_start (opcional)" />
+      <input name="odometer_end" placeholder="odometer_end (opcional)" />
+      <input name="load_id" placeholder="load_id (opcional)" />
+      <input name="logged_at" placeholder="logged_at (YYYY-MM-DD HH:MM) opcional" />
+      <button type="submit">Guardar km</button>
+    </form>
+    <pre id="kmOut"></pre>
+  </section>
+
+  <section>
+    <h2>KM logs</h2>
+    <button id="kmReload">Recargar</button>
+    <pre id="kmList"></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Registrar pago a conductor</h2>
+    <form id="payForm">
+      <input name="driver_id" placeholder="driver_id (requerido)" required />
+      <input name="amount" placeholder="amount (requerido)" required />
+      <input name="currency" placeholder="currency (USD/MXN) opcional" />
+      <input name="method" placeholder="method (opcional)" />
+      <input name="notes" placeholder="notes (opcional)" />
+      <input name="load_id" placeholder="load_id (opcional)" />
+      <input name="paid_at" placeholder="paid_at (YYYY-MM-DD HH:MM) opcional" />
+      <button type="submit">Guardar pago</button>
+    </form>
+    <pre id="payOut"></pre>
+  </section>
+
+  <section>
+    <h2>Driver payments</h2>
+    <button id="payReload">Recargar</button>
+    <pre id="payList"></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <h2>Stats summary</h2>
+    <button id="statsReload">Recargar</button>
+    <pre id="statsOut"></pre>
+  </section>
+
 <script>
-async function loadTrucks() {
-  const r = await fetch("/api/trucks");
+async function loadJson(url, elId) {
+  const r = await fetch(url);
   const data = await r.json();
-  document.getElementById("truckList").textContent = JSON.stringify(data, null, 2);
+  document.getElementById(elId).textContent = JSON.stringify(data, null, 2);
+  return data;
 }
 
-async function loadTrailers() {
-  const r = await fetch("/api/trailers");
-  const data = await r.json();
-  document.getElementById("trailerList").textContent = JSON.stringify(data, null, 2);
-}
-
-async function loadDrivers() {
-  const r = await fetch("/api/drivers");
-  const data = await r.json();
-  document.getElementById("driverList").textContent = JSON.stringify(data, null, 2);
-}
-
-async function loadLoads() {
-  const r = await fetch("/api/loads");
-  const data = await r.json();
-  document.getElementById("loadList").textContent = JSON.stringify(data, null, 2);
-}
-
-document.getElementById("truckReload").onclick = loadTrucks;
-document.getElementById("trailerReload").onclick = loadTrailers;
-document.getElementById("driverReload").onclick = loadDrivers;
-document.getElementById("loadReload").onclick = loadLoads;
-
-document.getElementById("truckForm").onsubmit = async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-
-  const payload = {
-    unit_number: fd.get("unit_number"),
-    vin: fd.get("vin") || undefined,
-    year: fd.get("year") ? Number(fd.get("year")) : undefined,
-    make: fd.get("make") || undefined,
-    model: fd.get("model") || undefined,
-    engine: fd.get("engine") || undefined,
-    current_km: fd.get("current_km") ? Number(fd.get("current_km")) : undefined
-  };
-
-  const r = await fetch("/api/trucks", {
+async function postJson(url, payload, outElId) {
+  const r = await fetch(url, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(payload)
   });
-
   const data = await r.json();
-  document.getElementById("truckOut").textContent = JSON.stringify(data, null, 2);
-  await loadTrucks();
+  document.getElementById(outElId).textContent = JSON.stringify(data, null, 2);
+  return data;
+}
+
+function numOrUndef(v) { return v ? Number(v) : undefined; }
+function intOrUndef(v) { return v ? Number(v) : undefined; }
+function strOrUndef(v) { return v ? v : undefined; }
+
+async function loadAll() {
+  await loadJson("/api/trucks", "truckList");
+  await loadJson("/api/trailers", "trailerList");
+  await loadJson("/api/drivers", "driverList");
+  await loadJson("/api/loads", "loadList");
+  await loadJson("/api/fuel_entries", "fuelList");
+  await loadJson("/api/km_logs", "kmList");
+  await loadJson("/api/driver_payments", "payList");
+  await loadJson("/api/stats/summary", "statsOut");
+}
+
+document.getElementById("truckReload").onclick = () => loadJson("/api/trucks", "truckList");
+document.getElementById("trailerReload").onclick = () => loadJson("/api/trailers", "trailerList");
+document.getElementById("driverReload").onclick = () => loadJson("/api/drivers", "driverList");
+document.getElementById("loadReload").onclick = () => loadJson("/api/loads", "loadList");
+document.getElementById("fuelReload").onclick = () => loadJson("/api/fuel_entries", "fuelList");
+document.getElementById("kmReload").onclick = () => loadJson("/api/km_logs", "kmList");
+document.getElementById("payReload").onclick = () => loadJson("/api/driver_payments", "payList");
+document.getElementById("statsReload").onclick = () => loadJson("/api/stats/summary", "statsOut");
+
+document.getElementById("truckForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    unit_number: fd.get("unit_number"),
+    vin: strOrUndef(fd.get("vin")),
+    year: numOrUndef(fd.get("year")),
+    make: strOrUndef(fd.get("make")),
+    model: strOrUndef(fd.get("model")),
+    engine: strOrUndef(fd.get("engine")),
+    current_km: numOrUndef(fd.get("current_km"))
+  };
+  await postJson("/api/trucks", payload, "truckOut");
+  await loadJson("/api/trucks", "truckList");
+  await loadJson("/api/stats/summary", "statsOut");
 };
 
 document.getElementById("trailerForm").onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
-
   const payload = {
     unit_number: fd.get("unit_number"),
-    vin: fd.get("vin") || undefined,
+    vin: strOrUndef(fd.get("vin")),
     type: fd.get("type"),
-    current_km: fd.get("current_km") ? Number(fd.get("current_km")) : undefined
+    current_km: numOrUndef(fd.get("current_km"))
   };
-
-  const r = await fetch("/api/trailers", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-
-  const data = await r.json();
-  document.getElementById("trailerOut").textContent = JSON.stringify(data, null, 2);
-  await loadTrailers();
+  await postJson("/api/trailers", payload, "trailerOut");
+  await loadJson("/api/trailers", "trailerList");
 };
 
 document.getElementById("driverForm").onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
-
   const payload = {
     name: fd.get("name"),
-    license: fd.get("license") || undefined,
-    phone: fd.get("phone") || undefined,
-    pay_type: fd.get("pay_type") || undefined,
-    pay_rate: fd.get("pay_rate") ? Number(fd.get("pay_rate")) : undefined
+    license: strOrUndef(fd.get("license")),
+    phone: strOrUndef(fd.get("phone")),
+    pay_type: strOrUndef(fd.get("pay_type")),
+    pay_rate: numOrUndef(fd.get("pay_rate"))
   };
-
-  const r = await fetch("/api/drivers", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-
-  const data = await r.json();
-  document.getElementById("driverOut").textContent = JSON.stringify(data, null, 2);
-  await loadDrivers();
+  await postJson("/api/drivers", payload, "driverOut");
+  await loadJson("/api/drivers", "driverList");
+  await loadJson("/api/stats/summary", "statsOut");
 };
 
 document.getElementById("loadForm").onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
-
   const payload = {
     reference: fd.get("reference"),
-    shipper: fd.get("shipper") || undefined,
-    pickup_location: fd.get("pickup_location") || undefined,
-    delivery_location: fd.get("delivery_location") || undefined,
-    pickup_date: fd.get("pickup_date") || undefined,
-    delivery_date: fd.get("delivery_date") || undefined,
-    commodity: fd.get("commodity") || undefined,
-    weight_kg: fd.get("weight_kg") ? Number(fd.get("weight_kg")) : undefined,
-    distance_km: fd.get("distance_km") ? Number(fd.get("distance_km")) : undefined,
+    shipper: strOrUndef(fd.get("shipper")),
+    pickup_location: strOrUndef(fd.get("pickup_location")),
+    delivery_location: strOrUndef(fd.get("delivery_location")),
+    pickup_date: strOrUndef(fd.get("pickup_date")),
+    delivery_date: strOrUndef(fd.get("delivery_date")),
+    commodity: strOrUndef(fd.get("commodity")),
+    weight_kg: numOrUndef(fd.get("weight_kg")),
+    distance_km: numOrUndef(fd.get("distance_km")),
     truck_id: Number(fd.get("truck_id")),
     trailer_id: Number(fd.get("trailer_id")),
     driver_id: Number(fd.get("driver_id")),
-    status: fd.get("status") || undefined
+    status: strOrUndef(fd.get("status"))
   };
-
-  const r = await fetch("/api/loads", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-
-  const data = await r.json();
-  document.getElementById("loadOut").textContent = JSON.stringify(data, null, 2);
-  await loadLoads();
+  await postJson("/api/loads", payload, "loadOut");
+  await loadJson("/api/loads", "loadList");
 };
 
-loadTrucks();
-loadTrailers();
-loadDrivers();
-loadLoads();
+document.getElementById("fuelForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    truck_id: Number(fd.get("truck_id")),
+    liters: Number(fd.get("liters")),
+    total_cost: numOrUndef(fd.get("total_cost")),
+    currency: strOrUndef(fd.get("currency")),
+    odometer_km: numOrUndef(fd.get("odometer_km")),
+    location: strOrUndef(fd.get("location")),
+    driver_id: intOrUndef(fd.get("driver_id")),
+    load_id: intOrUndef(fd.get("load_id")),
+    fueled_at: strOrUndef(fd.get("fueled_at"))
+  };
+  await postJson("/api/fuel_entries", payload, "fuelOut");
+  await loadJson("/api/fuel_entries", "fuelList");
+  await loadJson("/api/stats/summary", "statsOut");
+};
+
+document.getElementById("kmForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    truck_id: Number(fd.get("truck_id")),
+    km: Number(fd.get("km")),
+    odometer_start: numOrUndef(fd.get("odometer_start")),
+    odometer_end: numOrUndef(fd.get("odometer_end")),
+    load_id: intOrUndef(fd.get("load_id")),
+    logged_at: strOrUndef(fd.get("logged_at"))
+  };
+  await postJson("/api/km_logs", payload, "kmOut");
+  await loadJson("/api/km_logs", "kmList");
+  await loadJson("/api/stats/summary", "statsOut");
+};
+
+document.getElementById("payForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const payload = {
+    driver_id: Number(fd.get("driver_id")),
+    amount: Number(fd.get("amount")),
+    currency: strOrUndef(fd.get("currency")),
+    method: strOrUndef(fd.get("method")),
+    notes: strOrUndef(fd.get("notes")),
+    load_id: intOrUndef(fd.get("load_id")),
+    paid_at: strOrUndef(fd.get("paid_at"))
+  };
+  await postJson("/api/driver_payments", payload, "payOut");
+  await loadJson("/api/driver_payments", "payList");
+  await loadJson("/api/stats/summary", "statsOut");
+};
+
+loadAll();
 </script>
 </body>
 </html>
