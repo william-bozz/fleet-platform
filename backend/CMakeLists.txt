@@ -11,6 +11,7 @@ add_executable(fleetd
   src/trucks.c
   src/trailers.c
   src/drivers.c
+  src/loads.c
   vendor/civetweb/src/civetweb.c
   vendor/cJSON/cJSON.c
 )

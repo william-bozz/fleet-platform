@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <sqlite3.h>
 #include "cJSON.h"
@@ -103,7 +104,6 @@ static int drivers_create(struct mg_connection *conn) {
     const cJSON *pay_rate = cJSON_GetObjectItemCaseSensitive(root, "pay_rate");
     const cJSON *status = cJSON_GetObjectItemCaseSensitive(root, "status");
 
-    // si mandan pay_type, validarlo; pay_rate es opcional pero útil si hay pay_type
     if (cJSON_IsString(pay_type) && !is_valid_pay_type(pay_type->valuestring)) {
         cJSON_Delete(root);
         send_json(conn, 400, "{\"error\":\"pay_type_invalid_per_km_percent_salary\"}");

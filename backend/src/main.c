@@ -10,10 +10,11 @@
 #include "trucks.h"
 #include "trailers.h"
 #include "drivers.h"
+#include "loads.h"
 
 static int handle_health(struct mg_connection *conn, void *cbdata) {
     (void)cbdata;
-    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.2\"}");
+    send_json(conn, 200, "{\"ok\":true,\"service\":\"fleet-platform\",\"version\":\"0.4\"}");
     return 200;
 }
 
@@ -42,12 +43,15 @@ int main(void) {
     mg_set_request_handler(ctx, "/api/trucks", handle_api_trucks, 0);
     mg_set_request_handler(ctx, "/api/trailers", handle_api_trailers, 0);
     mg_set_request_handler(ctx, "/api/drivers", handle_api_drivers, 0);
+    mg_set_request_handler(ctx, "/api/loads", handle_api_loads, 0);
 
     printf("Servidor local: http://127.0.0.1:8080\n");
     printf("health:         http://127.0.0.1:8080/health\n");
     printf("frontend:       http://127.0.0.1:8080/\n");
     printf("api trucks:     http://127.0.0.1:8080/api/trucks\n");
     printf("api trailers:   http://127.0.0.1:8080/api/trailers\n");
+    printf("api drivers:    http://127.0.0.1:8080/api/drivers\n");
+    printf("api loads:      http://127.0.0.1:8080/api/loads\n");
 
     for (;;) sleep(1);
 

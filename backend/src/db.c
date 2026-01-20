@@ -52,7 +52,7 @@ static int create_schema(sqlite3 *db) {
         "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "  unit_number TEXT NOT NULL,"
         "  vin TEXT,"
-        "  type TEXT NOT NULL,"  /* reefer | dry_van | flatbed */
+        "  type TEXT NOT NULL,"
         "  status TEXT DEFAULT 'active',"
         "  current_km REAL DEFAULT 0,"
         "  created_at TEXT DEFAULT (datetime('now'))"
@@ -65,14 +65,41 @@ static int create_schema(sqlite3 *db) {
         "  name TEXT NOT NULL,"
         "  license TEXT,"
         "  phone TEXT,"
-        "  pay_type TEXT,"       /* per_km | percent | salary */
-        "  pay_rate REAL,"       /* número según pay_type */
+        "  pay_type TEXT,"
+        "  pay_rate REAL,"
         "  status TEXT DEFAULT 'active',"
         "  created_at TEXT DEFAULT (datetime('now'))"
         ");"
         "CREATE INDEX IF NOT EXISTS idx_drivers_name ON drivers(name);"
-        "CREATE INDEX IF NOT EXISTS idx_drivers_license ON drivers(license);";
+        "CREATE INDEX IF NOT EXISTS idx_drivers_license ON drivers(license);"
 
+        "CREATE TABLE IF NOT EXISTS loads ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  reference TEXT NOT NULL,"
+        "  shipper TEXT,"
+        "  pickup_location TEXT,"
+        "  delivery_location TEXT,"
+        "  pickup_date TEXT,"
+        "  delivery_date TEXT,"
+        "  commodity TEXT,"
+        "  weight_kg REAL,"
+        "  rate REAL,"
+        "  currency TEXT DEFAULT 'USD',"
+        "  distance_km REAL,"
+        "  status TEXT DEFAULT 'planned',"
+        "  truck_id INTEGER NOT NULL,"
+        "  trailer_id INTEGER NOT NULL,"
+        "  driver_id INTEGER NOT NULL,"
+        "  created_at TEXT DEFAULT (datetime('now')),"
+        "  FOREIGN KEY(truck_id) REFERENCES trucks(id),"
+        "  FOREIGN KEY(trailer_id) REFERENCES trailers(id),"
+        "  FOREIGN KEY(driver_id) REFERENCES drivers(id)"
+        ");"
+        "CREATE INDEX IF NOT EXISTS idx_loads_ref ON loads(reference);"
+        "CREATE INDEX IF NOT EXISTS idx_loads_status ON loads(status);"
+        "CREATE INDEX IF NOT EXISTS idx_loads_truck ON loads(truck_id);"
+        "CREATE INDEX IF NOT EXISTS idx_loads_trailer ON loads(trailer_id);"
+        "CREATE INDEX IF NOT EXISTS idx_loads_driver ON loads(driver_id);";
 
     return db_exec(db, schema);
 }

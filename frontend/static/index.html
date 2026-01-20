@@ -6,7 +6,7 @@
   <title>Fleet Platform (local)</title>
 </head>
 <body>
-  <h1>Fleet Platform (local) v0.3</h1>
+  <h1>Fleet Platform (local) v0.4</h1>
 
   <section>
     <h2>Crear camión</h2>
@@ -17,6 +17,7 @@
       <input name="make" placeholder="make (opcional)" />
       <input name="model" placeholder="model (opcional)" />
       <input name="engine" placeholder="engine (opcional)" />
+      <input name="current_km" placeholder="current_km (opcional)" />
       <button type="submit">Guardar camión</button>
     </form>
     <pre id="truckOut"></pre>
@@ -35,14 +36,13 @@
     <form id="trailerForm">
       <input name="unit_number" placeholder="unit_number (ej. TR-101)" required />
       <input name="vin" placeholder="vin (opcional)" />
-
       <select name="type" required>
         <option value="">type...</option>
         <option value="reefer">reefer</option>
         <option value="dry_van">dry_van</option>
         <option value="flatbed">flatbed</option>
       </select>
-
+      <input name="current_km" placeholder="current_km (opcional)" />
       <button type="submit">Guardar trailer</button>
     </form>
     <pre id="trailerOut"></pre>
@@ -56,32 +56,67 @@
 
   <hr>
 
-    <section>
+  <section>
     <h2>Crear conductor</h2>
     <form id="driverForm">
-        <input name="name" placeholder="name (ej. Juan Perez)" required />
-        <input name="license" placeholder="license (opcional)" />
-        <input name="phone" placeholder="phone (opcional)" />
-
-        <select name="pay_type">
+      <input name="name" placeholder="name (ej. Juan Perez)" required />
+      <input name="license" placeholder="license (opcional)" />
+      <input name="phone" placeholder="phone (opcional)" />
+      <select name="pay_type">
         <option value="">pay_type (opcional)...</option>
         <option value="per_km">per_km</option>
         <option value="percent">percent</option>
         <option value="salary">salary</option>
-        </select>
-
-        <input name="pay_rate" placeholder="pay_rate (opcional)" />
-        <button type="submit">Guardar conductor</button>
+      </select>
+      <input name="pay_rate" placeholder="pay_rate (opcional)" />
+      <button type="submit">Guardar conductor</button>
     </form>
     <pre id="driverOut"></pre>
-    </section>
+  </section>
 
-    <section>
+  <section>
     <h2>Conductores</h2>
     <button id="driverReload">Recargar</button>
     <pre id="driverList"></pre>
-    </section>
+  </section>
 
+  <hr>
+
+  <section>
+    <h2>Crear carga</h2>
+    <form id="loadForm">
+      <input name="reference" placeholder="reference (ej. LOAD-001)" required />
+      <input name="shipper" placeholder="shipper (opcional)" />
+      <input name="pickup_location" placeholder="pickup_location (opcional)" />
+      <input name="delivery_location" placeholder="delivery_location (opcional)" />
+      <input name="pickup_date" placeholder="pickup_date (YYYY-MM-DD)" />
+      <input name="delivery_date" placeholder="delivery_date (YYYY-MM-DD)" />
+      <input name="commodity" placeholder="commodity (opcional)" />
+      <input name="weight_kg" placeholder="weight_kg (opcional)" />
+      <input name="distance_km" placeholder="distance_km (opcional)" />
+
+      <input name="truck_id" placeholder="truck_id (requerido)" required />
+      <input name="trailer_id" placeholder="trailer_id (requerido)" required />
+      <input name="driver_id" placeholder="driver_id (requerido)" required />
+
+      <select name="status">
+        <option value="">status (default planned)</option>
+        <option value="planned">planned</option>
+        <option value="in_transit">in_transit</option>
+        <option value="delivered">delivered</option>
+        <option value="cancelled">cancelled</option>
+      </select>
+
+      <button type="submit">Guardar carga</button>
+    </form>
+    <pre id="loadOut"></pre>
+  </section>
+
+  <section>
+    <h2>Cargas</h2>
+    <button id="loadReload">Recargar</button>
+    <pre id="loadList"></pre>
+  </section>
 
 <script>
 async function loadTrucks() {
@@ -102,9 +137,16 @@ async function loadDrivers() {
   document.getElementById("driverList").textContent = JSON.stringify(data, null, 2);
 }
 
+async function loadLoads() {
+  const r = await fetch("/api/loads");
+  const data = await r.json();
+  document.getElementById("loadList").textContent = JSON.stringify(data, null, 2);
+}
+
 document.getElementById("truckReload").onclick = loadTrucks;
 document.getElementById("trailerReload").onclick = loadTrailers;
 document.getElementById("driverReload").onclick = loadDrivers;
+document.getElementById("loadReload").onclick = loadLoads;
 
 document.getElementById("truckForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -116,7 +158,8 @@ document.getElementById("truckForm").onsubmit = async (e) => {
     year: fd.get("year") ? Number(fd.get("year")) : undefined,
     make: fd.get("make") || undefined,
     model: fd.get("model") || undefined,
-    engine: fd.get("engine") || undefined
+    engine: fd.get("engine") || undefined,
+    current_km: fd.get("current_km") ? Number(fd.get("current_km")) : undefined
   };
 
   const r = await fetch("/api/trucks", {
@@ -137,7 +180,8 @@ document.getElementById("trailerForm").onsubmit = async (e) => {
   const payload = {
     unit_number: fd.get("unit_number"),
     vin: fd.get("vin") || undefined,
-    type: fd.get("type")
+    type: fd.get("type"),
+    current_km: fd.get("current_km") ? Number(fd.get("current_km")) : undefined
   };
 
   const r = await fetch("/api/trailers", {
@@ -155,14 +199,12 @@ document.getElementById("driverForm").onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
 
-  const payType = fd.get("pay_type") || undefined;
-  const payRateRaw = fd.get("pay_rate");
   const payload = {
     name: fd.get("name"),
     license: fd.get("license") || undefined,
     phone: fd.get("phone") || undefined,
-    pay_type: payType,
-    pay_rate: payRateRaw ? Number(payRateRaw) : undefined
+    pay_type: fd.get("pay_type") || undefined,
+    pay_rate: fd.get("pay_rate") ? Number(fd.get("pay_rate")) : undefined
   };
 
   const r = await fetch("/api/drivers", {
@@ -176,10 +218,41 @@ document.getElementById("driverForm").onsubmit = async (e) => {
   await loadDrivers();
 };
 
+document.getElementById("loadForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payload = {
+    reference: fd.get("reference"),
+    shipper: fd.get("shipper") || undefined,
+    pickup_location: fd.get("pickup_location") || undefined,
+    delivery_location: fd.get("delivery_location") || undefined,
+    pickup_date: fd.get("pickup_date") || undefined,
+    delivery_date: fd.get("delivery_date") || undefined,
+    commodity: fd.get("commodity") || undefined,
+    weight_kg: fd.get("weight_kg") ? Number(fd.get("weight_kg")) : undefined,
+    distance_km: fd.get("distance_km") ? Number(fd.get("distance_km")) : undefined,
+    truck_id: Number(fd.get("truck_id")),
+    trailer_id: Number(fd.get("trailer_id")),
+    driver_id: Number(fd.get("driver_id")),
+    status: fd.get("status") || undefined
+  };
+
+  const r = await fetch("/api/loads", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await r.json();
+  document.getElementById("loadOut").textContent = JSON.stringify(data, null, 2);
+  await loadLoads();
+};
+
 loadTrucks();
 loadTrailers();
 loadDrivers();
-
+loadLoads();
 </script>
 </body>
 </html>
