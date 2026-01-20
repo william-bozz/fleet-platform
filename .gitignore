@@ -1,0 +1,21 @@
+# builds generados por CMake
+/backend/build/
+
+# base de datos local y archivos de data
+/data/
+*.db
+*.db-wal
+*.db-shm
+
+# basura típica de compilación
+*.o
+*.a
+*.so
+*.out
+*.log
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store

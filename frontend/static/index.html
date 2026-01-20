@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fleet Platform (local)</title>
+</head>
+<body>
+  <h1>Fleet Platform (local)</h1>
+
+  <section>
+    <h2>Crear camión</h2>
+    <form id="f">
+      <input name="unit_number" placeholder="unit_number (ej. 2827)" required />
+      <input name="vin" placeholder="vin (opcional)" />
+      <input name="year" placeholder="year (opcional)" />
+      <input name="make" placeholder="make (opcional)" />
+      <input name="model" placeholder="model (opcional)" />
+      <input name="engine" placeholder="engine (opcional)" />
+      <button type="submit">Guardar</button>
+    </form>
+    <pre id="out"></pre>
+  </section>
+
+  <section>
+    <h2>Camiones</h2>
+    <button id="reload">Recargar</button>
+    <pre id="list"></pre>
+  </section>
+
+<script>
+async function loadTrucks() {
+  const r = await fetch("/api/trucks");
+  const data = await r.json();
+  document.getElementById("list").textContent = JSON.stringify(data, null, 2);
+}
+
+document.getElementById("reload").onclick = loadTrucks;
+
+document.getElementById("f").onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payload = {
+    unit_number: fd.get("unit_number"),
+    vin: fd.get("vin") || undefined,
+    year: fd.get("year") ? Number(fd.get("year")) : undefined,
+    make: fd.get("make") || undefined,
+    model: fd.get("model") || undefined,
+    engine: fd.get("engine") || undefined
+  };
+
+  const r = await fetch("/api/trucks", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await r.json();
+  document.getElementById("out").textContent = JSON.stringify(data, null, 2);
+  await loadTrucks();
+};
+
+loadTrucks();
+</script>
+</body>
+</html>
